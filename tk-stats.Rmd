@@ -22,8 +22,184 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 ```
 
 
-## 1. 삼국지...
+## 1. 코에이 삼국지 [^koei-three-kingdoms] [^koei-from-one-to-12] {#koei-three-kingdoms}
 
-데이터...
+[^koei-three-kingdoms]: [나무 위키, 삼국지 시리즈](https://namu.wiki/w/%EC%82%BC%EA%B5%AD%EC%A7%80%20%EC%8B%9C%EB%A6%AC%EC%A6%88)
+
+[^koei-from-one-to-12]: [인스티즈, 역대 코에이 삼국지 시리즈 1부터 12까지 알아보자!!!](https://www.instiz.net/clip/704651)
+
+일본의 코에이 테크모에서 개발/발매하는 PC용 삼국지 기반 역사 시뮬레이션 게임으로 
+2세기 말 ~ 3세기 중반 중국의 후한 말기 및 삼국시대를 역사적 배경으로 한다. 
+
+코에이 삼국지의 역사적인 배경은 다음과 같다.
+
+- 184년 황건의 난: 하진, 장각, 손견, 동탁, 마등, 공손찬, 유언, 정원 등
+- 190년 반동탁연합: 조조, 유비, 손견, 동탁, 원소, 유표, 원술, 유언, 마등, 공손찬, 도겸 등
+- 195년 군웅할거 : 조조, 유비, 손책, 여포, 원소, 유표, 원술, 유장, 마등, 공손찬 등
+- 198년 여포토벌전: 조조, 유비, 손책, 여포, 원소, 유표, 원술, 유장, 마등, 공손찬 등
+- 200년 관도전투: 조조, 유비, 손권(손책), 원소, 유표, 유장, 마등, 장로 등
+- 207년 삼고초려: 조조, 유비, 손권, 유표, 유장, 마등, 장로 등
+- 208년 적벽대전: 조조, 유비, 손권, 유표, 유장, 마등, 장로 등
+- 215년 ~ 223년 삼국정립 ~ 이릉대전/오로침공전: 조조(조비), 유비(유선), 손권, 공손공, 맹획 등
+
+### 1.1. 코에이 삼국지 발매년도 [^koei-three-kingdoms-release] {#koei-three-kingdoms-release}
+
+[^koei-three-kingdoms-release]: [나무위키, 삼국지 시리즈 (r741 판)](https://namu.wiki/w/%EC%82%BC%EA%B5%AD%EC%A7%80%20%EC%8B%9C%EB%A6%AC%EC%A6%88?rev=741?noredirect=1)
+
+코에이 삼국지 발매년도는 다음과 같다.
+
+- 삼국지 1 (1985년) (PC, FC, SFC, SS, PS1)
+- 삼국지 2 (1989년) (PC, FC, SFC, MD, PS1, GBC, WS, iOS, Android)
+- 삼국지 3 (1992년) (PC, SFC, MD, MCD, PCE, PS1, DS, 3DS)
+- 삼국지 4 (1994년) (PC, SFC, 3DO, SS, 32X, PS1, GBA, DS)
+- 삼국지 5 (1996년) (PC, SS, PS1, PSP, DS, 3DS)
+- 삼국지 6 (1998년) (PC, PS1, DC, PSP)
+- 삼국지 7 (2000년) (PC, PS1, PS2, PSP)
+- 삼국지 8 (2001년) (PC, PS2, PSP)
+- 삼국지 9 (2003년) (PC, PS2, PSP)
+- 삼국지 10 (2004년) (PC, PS2)
+- 삼국지 11 (2006년) (PC, PS2, Wii)
+- 삼국지 12 (2012년) (PC, PS3, Wii U, PS Vita)
+- 삼국지 13 (2016년) (PC, PS3, PS4, XBO, PS Vita, SW)
+
+## 2. 삼국지 스탯(stat) {#three-kingdoms-stats}
 
 
+### 2.1. 삼국지 10 스탯 {#three-kingdoms-stats-10}
+
+
+``` {r three-kingdoms-stats-10}
+library(rvest)
+library(tidyverse)
+library(lubridate)
+library(extrafont)
+loadfonts()
+
+# 1. 데이터 가져오기 -----
+Sys.setlocale("LC_ALL", "C")
+
+## 1.1. 삼국지 10 능력치
+tk_10_url <- "https://zetawiki.com/wiki/%EC%82%BC%EA%B5%AD%EC%A7%80_10_%EB%8A%A5%EB%A0%A5%EC%B9%98_%EB%AA%A9%EB%A1%9D"
+
+## 인코딩 확인
+tk_10_url_encoding <- httr::content(httr::GET(tk_10_url), "raw")
+# guess_encoding(tk_10_url_encoding)
+
+tk_10_dat <- tk_10_url %>% 
+  read_html(tk_10_url) %>% 
+  html_nodes(xpath='//*[@id="mw-content-text"]/table') %>% 
+  html_table(fill = TRUE) %>% 
+  .[[1]]
+
+Sys.setlocale("LC_ALL", "Korean")
+
+DT::datatable(tk_10_dat)
+
+# 2. 데이터 정제 -----
+
+tk_10_df <- tk_10_dat %>% 
+  select(이름 = `이름(한글)`, 한문명=`이름(한자)`, everything()) %>% 
+  mutate(등장연도 = make_date(year=등장연도)) %>% 
+  mutate(탄생연도 = make_date(year=탄생연도)) %>% 
+  tbl_df() %>% 
+  filter(이름 != "양서") # 세력상성 782 오류
+
+# 3. 시각화 -----
+## 3.0. 시각화 데이터 -----
+tk_10_viz_df <- tk_10_df %>% 
+  gather(능력구분, 능력값, 통솔:개인상성)
+
+## 3.1. 시각화 데이터 -----
+ggplot(tk_10_viz_df, aes(x=탄생연도, y=능력값, group=능력구분, color=능력구분)) +
+    geom_point() +
+    facet_wrap(~능력구분)
+```
+
+
+### 2.2. 삼국지 11 스탯 {#three-kingdoms-stats-11}
+
+
+``` {r three-kingdoms-stats-11}
+# 1. 데이터 가져오기 -----
+
+Sys.setlocale("LC_ALL", "C")
+
+## 1.1. 삼국지 10 능력치
+tk_11_url <- "https://zetawiki.com/wiki/%EC%82%BC%EA%B5%AD%EC%A7%80_11_%EB%8A%A5%EB%A0%A5%EC%B9%98_%EB%AA%A9%EB%A1%9D"
+
+## 인코딩 확인
+tk_11_url_encoding <- httr::content(httr::GET(tk_11_url), "raw")
+# guess_encoding(tk_11_url_encoding)
+
+tk_11_dat <- tk_11_url %>% 
+  read_html(tk_11_url) %>% 
+  html_nodes(xpath='//*[@id="mw-content-text"]/table') %>% 
+  html_table(fill = TRUE) %>% 
+  .[[1]]
+
+Sys.setlocale("LC_ALL", "Korean")
+
+DT::datatable(tk_11_dat)
+
+# 2. 데이터 정제 -----
+
+tk_11_df <- tk_11_dat %>% 
+  mutate(등장년도 = make_date(year=등장년도)) %>% 
+  mutate(출생년도 = make_date(year=출생년도)) %>%
+  mutate(사망년도 = make_date(year=사망년도)) %>% 
+  tbl_df()
+
+# 3. 시각화 -----
+## 3.0. 시각화 데이터 -----
+tk_11_viz_df <- tk_11_df %>% 
+  gather(능력구분, 능력값, 통솔:능력종합)
+
+tk_11_viz_df %>% 
+  filter(능력구분 != "능력종합") %>% 
+  ggplot(aes(x=능력구분, y=능력값, fill=능력구분)) +
+  geom_boxplot() +
+  theme_bw(base_family = "NanumGothic") +
+  theme(legend.position = "none")
+```
+
+### 2.3. 삼국지 12 스탯 {#three-kingdoms-stats-12}
+
+``` {r three-kingdoms-stats-12}
+# 1. 데이터 가져오기 -----
+Sys.setlocale("LC_ALL", "C")
+
+## 1.1. 삼국지 12 능력치
+tk_12_url <- "https://zetawiki.com/wiki/%EC%82%BC%EA%B5%AD%EC%A7%80_12_%EB%8A%A5%EB%A0%A5%EC%B9%98_%EB%AA%A9%EB%A1%9D"
+
+## 인코딩 확인
+tk_12_url_encoding <- httr::content(httr::GET(tk_12_url), "raw")
+# guess_encoding(tk_12_url_encoding)
+
+tk_12_dat <- tk_12_url %>% 
+  read_html(tk_11_url) %>% 
+  html_nodes(xpath='//*[@id="mw-content-text"]/table') %>% 
+  html_table(fill = TRUE) %>% 
+  .[[1]]
+
+Sys.setlocale("LC_ALL", "Korean")
+
+DT::datatable(tk_12_dat)
+
+# 2. 데이터 정제 -----
+
+tk_12_df <- tk_12_dat %>% 
+  tbl_df()
+
+# 3. 시각화 -----
+## 3.0. 시각화 데이터 -----
+tk_12_viz_df <- tk_12_df %>% 
+  gather(능력구분, 능력값, 통솔:능력종합)
+
+## 3.1. 능력종합 vs 매력 -----
+tk_12_viz_df %>% 
+  filter(능력구분 != "능력종합") %>% 
+  ggplot(aes(x=능력구분, y=능력값)) +
+    geom_boxplot() +
+    theme_bw(base_family = "NanumGothic") +
+    theme(legend.position = "none")
+```

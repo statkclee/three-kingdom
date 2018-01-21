@@ -1,0 +1,29 @@
+---
+layout: page
+title: 삼국지
+subtitle: 삼국지 스탯(stat)
+date: "`r Sys.Date()`"
+author: xwMOOC
+output:
+  html_document: 
+    theme: journal
+    toc: yes
+    highlight: tango
+    code_folding: hide
+  pdf_document:
+    latex_engine: xelatex
+mainfont: NanumGothic
+---
+
+``` {r, include=FALSE}
+source("tools/chunk-options.R")
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+
+```
+
+
+## 1. 삼국지...
+
+데이터...
+
+
